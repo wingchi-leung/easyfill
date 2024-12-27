@@ -247,7 +247,7 @@ function createNotepad() {
         mouseMoveTimer = setTimeout(() => {
             const mouseX = e.clientX;
 
-            if (mouseX < 50) {  // 更改为检测左侧
+            if (mouseX < 10) {  // 更改为检测左侧
                 clearTimeout(hideTimeout);
                 showNotepad();
             } else if (isVisible && !notepad.matches(':hover') && !textarea.matches(':focus')) {
