@@ -146,15 +146,23 @@ function createNotepad() {
     }
 
     // 保存内容的函数
+    // 更新保存内容的函数
     const saveContent = debounce((content) => {
         const timestamp = Date.now();
         chrome.storage.sync.set({
             notepadContent: content,
             lastUpdateTimestamp: timestamp
+        }, () => {
+            // 发送消息到其他标签页
+            chrome.runtime.sendMessage({
+                action: 'contentUpdated',
+                content: content,
+                timestamp: timestamp
+            });
         });
         lastUpdateTimestamp = timestamp;
         lastSavedContent = content;
-    }, 100);
+    }, 300);
 
     // 加载保存的内容
     chrome.storage.sync.get(['notepadContent', 'lastUpdateTimestamp'], function (result) {
@@ -178,12 +186,8 @@ function createNotepad() {
 
     // 修改焦点处理
     textarea.addEventListener('blur', function () {
-        setTimeout(() => {
-            if (!notepad.matches(':hover')) {
-                isLocked = false;
-                startHideTimer();
-            }
-        }, 150);
+        isLocked = false;
+        startHideTimer();
     });
 
     textarea.addEventListener('focus', function () {
@@ -265,6 +269,25 @@ function createNotepad() {
                 lastSavedContent = newContent;
                 lastUpdateTimestamp = newTimestamp;
             }
+        }
+    });
+
+
+    // 监听来自其他标签页的更新消息
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === 'contentUpdated' && message.timestamp > lastUpdateTimestamp) {
+            textarea.value = message.content;
+            lastSavedContent = message.content;
+            lastUpdateTimestamp = message.timestamp;
+        }
+    });
+
+    // 初始加载保存的内容
+    chrome.storage.sync.get(['notepadContent', 'lastUpdateTimestamp'], function (result) {
+        if (result.notepadContent) {
+            textarea.value = result.notepadContent;
+            lastSavedContent = result.notepadContent;
+            lastUpdateTimestamp = result.lastUpdateTimestamp || Date.now();
         }
     });
 }
