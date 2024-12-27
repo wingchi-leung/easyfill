@@ -2,10 +2,14 @@ function createNotepad() {
     const notepadHTML = `
         <div id="browser-notepad" class="notepad-hidden">
             <div id="notepad-header">
+                <div id="notepad-title">Quick Notes</div>
                 <button id="notepad-close">×</button>
             </div>
             <div id="notepad-content">
                 <textarea id="notepad-textarea" placeholder="Type your notes here..."></textarea>
+            </div>
+            <div id="notepad-footer">
+                <span id="notepad-status">Auto-saved</span>
             </div>
         </div>
     `;
@@ -31,55 +35,99 @@ function createNotepad() {
     style.textContent = `
         #browser-notepad {
             position: fixed;
-            right: 0;
+            left: 0;
             top: 0;
-            width: 300px;
+            width: 320px;
             height: 100vh;
-            background: white;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
-            transition: all 0.3s ease-in-out;
+            background: #f8f9fa;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            transition: all 0.15s ease-out;
             z-index: 999999;
             display: flex;
             flex-direction: column;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            border-right: 1px solid #e0e0e0;
         }
+
         
         #browser-notepad.notepad-hidden {
-            width: 20px;
+            width: 0.1px;
+            background: transparent;
+            box-shadow: none;
+            border-left: none;
         }
         
         #notepad-header {
             display: flex;
-            justify-content: flex-end;
-            padding: 5px;
-            background-color: #f0f0f0;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #4a90e2;
+            color: white;
+            transition: opacity 0.1s ease-out;  
+        }
+        
+        #notepad-title {
+            font-size: 16px;
+            font-weight: bold;
         }
         
         #notepad-close {
             background: none;
             border: none;
-            font-size: 20px;
+            color: white;
+            font-size: 24px;
             cursor: pointer;
             padding: 0 5px;
+            transition: opacity 0.1s ease-out;  
+        }
+        
+        #notepad-close:hover {
+            transform: scale(1.2);
         }
         
         #notepad-content {
             flex-grow: 1;
-            opacity: 1;
-            transition: opacity 0.3s ease-in-out;
+            transition: opacity 0.1s ease-out; /* 加快过渡时间 */
+            padding: 10px;
+        }
+        
+        #notepad-footer {
+            padding: 8px 15px;
+            background-color: #e9ecef;
+            color: #495057;
+            font-size: 12px;
+            text-align: right;
+            border-top: 1px solid #dee2e6;
+            transition: opacity 0.1s ease-out; /* 加快过渡时间 */
+
         }
         
         .notepad-hidden #notepad-content,
-        .notepad-hidden #notepad-header {
+        .notepad-hidden #notepad-header,
+        .notepad-hidden #notepad-footer {
             opacity: 0;
+            pointer-events: none;
         }
         
         #notepad-textarea {
             width: 100%;
             height: 100%;
             border: none;
+            background-color: transparent;
             padding: 10px;
             resize: none;
             font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+        }
+        
+        #notepad-textarea:focus {
+            outline: none;
+        }
+        
+        #notepad-textarea::placeholder {
+            color: #adb5bd;
         }
     `;
     document.head.appendChild(style);
@@ -106,7 +154,7 @@ function createNotepad() {
         });
         lastUpdateTimestamp = timestamp;
         lastSavedContent = content;
-    }, 500);
+    }, 100);
 
     // 加载保存的内容
     chrome.storage.sync.get(['notepadContent', 'lastUpdateTimestamp'], function (result) {
@@ -128,17 +176,18 @@ function createNotepad() {
         }
     });
 
-    // 优化焦点处理
+    // 修改焦点处理
     textarea.addEventListener('blur', function () {
         setTimeout(() => {
             if (!notepad.matches(':hover')) {
                 isLocked = false;
                 startHideTimer();
             }
-        }, 200);
+        }, 150);
     });
 
     textarea.addEventListener('focus', function () {
+        clearTimeout(hideTimeout);
         isLocked = true;
         showNotepad();
     });
@@ -147,15 +196,12 @@ function createNotepad() {
     let mouseEnterTimeout;
     notepad.addEventListener('mouseenter', function () {
         clearTimeout(hideTimeout);
-        clearTimeout(mouseEnterTimeout);
-        mouseEnterTimeout = setTimeout(() => {
-            showNotepad();
-        }, 100);
+        showNotepad();
     });
 
     notepad.addEventListener('mouseleave', function () {
-        clearTimeout(mouseEnterTimeout);
-        if (!isLocked && !textarea.matches(':focus')) {
+        if (!textarea.matches(':focus')) {
+            isLocked = false;
             startHideTimer();
         }
     });
@@ -169,20 +215,25 @@ function createNotepad() {
     function showNotepad() {
         notepad.classList.remove('notepad-hidden');
         isVisible = true;
+        isLocked = true;
     }
 
+
     function hideNotepad() {
-        notepad.classList.add('notepad-hidden');
-        isVisible = false;
+        if (!isLocked) {
+            notepad.classList.add('notepad-hidden');
+            isVisible = false;
+        }
     }
+
 
     function startHideTimer() {
         clearTimeout(hideTimeout);
         hideTimeout = setTimeout(() => {
-            if (!isLocked && !textarea.matches(':focus')) {
+            if (!isLocked) {
                 hideNotepad();
             }
-        }, 2000);
+        }, 300);  // 减少延迟时间
     }
 
     // 优化鼠标移动检测
@@ -190,16 +241,16 @@ function createNotepad() {
     document.addEventListener('mousemove', (e) => {
         clearTimeout(mouseMoveTimer);
         mouseMoveTimer = setTimeout(() => {
-            const windowWidth = window.innerWidth;
             const mouseX = e.clientX;
 
-            if (mouseX > windowWidth - 50) {
+            if (mouseX < 50) {  // 更改为检测左侧
                 clearTimeout(hideTimeout);
                 showNotepad();
-            } else if (isVisible && !isLocked && !textarea.matches(':focus')) {
+            } else if (isVisible && !notepad.matches(':hover') && !textarea.matches(':focus')) {
+                isLocked = false;
                 startHideTimer();
             }
-        }, 50);
+        }, 30);
     });
 
     // 监听存储变化，实现多标签页同步
