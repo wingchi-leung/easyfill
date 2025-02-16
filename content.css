@@ -1,0 +1,36 @@
+ #browser-notepad {
+     position: fixed;
+     top: 0;
+     right: 0;
+     width: 20px;
+     height: 100%;
+     background-color: #f0f0f0;
+     transition: width 0.3s ease;
+     overflow: hidden;
+     z-index: 9999;
+ }
+
+ #browser-notepad:hover {
+     width: 300px;
+ }
+
+ #notepad-content {
+     width: 280px;
+     height: 100%;
+     padding: 10px;
+     box-sizing: border-box;
+     display: none;
+ }
+
+ #browser-notepad:hover #notepad-content {
+     display: block;
+ }
+
+ #browser-notepad textarea {
+     width: 100%;
+     height: 100%;
+     border: none;
+     resize: none;
+     font-family: Arial, sans-serif;
+     font-size: 14px;
+ }

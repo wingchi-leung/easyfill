@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器记事本插件</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #notepad {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 20px;
+            height: 100%;
+            background-color: #f0f0f0;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        #notepad:hover {
+            width: 300px;
+        }
+
+        #notepad-content {
+            width: 280px;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="notepad">
+        <div id="notepad-content">
+            <textarea placeholder="在这里输入你的笔记..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        const notepad = document.getElementById('notepad');
+        let timer;
+
+        document.addEventListener('mousemove', (e) => {
+            clearTimeout(timer);
+            if (e.clientY > window.innerHeight - 50) {
+                notepad.style.width = '300px';
+            } else {
+                timer = setTimeout(() => {
+                    notepad.style.width = '20px';
+                }, 500);
+            }
+        });
+    </script>
+</body>
+
+</html>

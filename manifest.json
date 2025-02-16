@@ -1,0 +1,28 @@
+{
+    "manifest_version": 3,
+    "name": "Browser Notepad",
+    "version": "1.0",
+    "description": "A simple notepad that appears on the right side of the browser window.",
+    "permissions": [
+        "activeTab",
+        "storage"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "css": [
+                "content.css"
+            ]
+        }
+    ],
+    "icons": {
+        "16": "icons/icon16-1.png",
+        "48": "icons/icon48-1.png",
+        "128": "icons/icon128-1.png"
+    }
+}
